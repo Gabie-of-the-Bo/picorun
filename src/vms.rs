@@ -191,8 +191,8 @@ impl LanguageServicePool{
         (*self.ports.lock().unwrap()).remove(&port);
     }
 
-    pub fn assign_one(&mut self) -> Mutex<LanguageService>{
-        return self.services.lock().unwrap().pop().unwrap();
+    pub fn assign_one(&mut self) -> Option<Mutex<LanguageService>>{
+        return self.services.lock().unwrap().pop();
     }
 
     pub fn start_all(&mut self) -> Result<(), String>{
@@ -227,8 +227,14 @@ impl LanguageServicePool{
     }
 
     pub fn execute_code(&mut self, language: String, code: String, restart_after: bool) -> Result<String, String>{
-        let service_m = self.assign_one();
+        let mut service_m_o = None;
         let out;
+
+        while service_m_o.is_none() {
+            service_m_o = self.assign_one();
+        }
+
+        let service_m = service_m_o.unwrap();
 
         {
             let mut service = service_m.lock().unwrap();
@@ -246,8 +252,14 @@ impl LanguageServicePool{
     }
 
     pub fn prepare_and_execute_code(&mut self, language: String, preparation: String, execution: String, code: String, restart_after: bool) -> Result<String, String>{
-        let service_m = self.assign_one();
+        let mut service_m_o = None;
         let out;
+
+        while service_m_o.is_none() {
+            service_m_o = self.assign_one();
+        }
+
+        let service_m = service_m_o.unwrap();
 
         {
             let mut service = service_m.lock().unwrap();

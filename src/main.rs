@@ -4,7 +4,9 @@ mod vms;
 extern crate lazy_static;
 extern crate reqwest;
 
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder, Error};
+use serde::Deserialize;
+use actix_cors::Cors;
+use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Error};
 
 use vms::*;
 
@@ -28,17 +30,23 @@ async fn shutdown_containers(data: web::Data<AppData>) -> impl Responder {
     }
 }
 
-#[get("/execute")]
-async fn execute(data: web::Data<AppData>) -> impl Responder {
+#[derive(Deserialize, Debug, Clone)]
+struct CodeData{
+    preparation: String,
+    code: String,
+    execution: String,
+}
+
+#[post("/execute")]
+async fn execute(data: web::Data<AppData>, post_data: web::Json<CodeData>) -> impl Responder {
     let mut pool = data.runner.clone();
 
     let lang = "python".to_string();
-    let exec = "write_output(str(sol(10)))".to_string();
-    let code = "import numpy as np
-def sol(n):
-    return np.ones(n) * 5".to_string();
+    let prep = post_data.preparation.clone();
+    let code = post_data.code.clone();
+    let exec = post_data.execution.clone();
     
-    return match pool.prepare_and_execute_code(lang.clone(), String::new(), exec.clone(), code.clone(), true) {
+    return match pool.prepare_and_execute_code(lang.clone(), prep, exec, code, true) {
         Ok(a) => Ok(a),
         Err(s) => Err(Error::from(HttpResponse::from(s)))
     }
@@ -51,6 +59,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
+            .wrap(Cors::permissive().supports_credentials())
             .app_data(web::Data::new(data.clone()))
             .service(start_containers)
             .service(shutdown_containers)
