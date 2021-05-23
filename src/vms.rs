@@ -44,7 +44,7 @@ impl LanguageService{
         if !self.is_started(){
             return match LanguageService::exec_command(&[
                 "docker", "run", "-d", "--rm", "-p", format!("{}:5000/tcp", port).as_str(), RUNNER_IMAGE.as_str(),
-                "sh", "-c", "cd home/pycorun-runner && RUST_LOG=info ./target/release/server"
+                "sh", "-c", "cd home/picorun-runner && RUST_LOG=info ./target/release/server"
             ]) {
                 Ok(out) => {
                     self.id = Some(String::from_utf8(out.stdout).unwrap().trim().to_string());
