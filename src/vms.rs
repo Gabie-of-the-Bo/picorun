@@ -8,7 +8,7 @@ use rand::Rng;
 use std::sync::{Arc, Mutex};
 
 lazy_static! {
-    static ref RUNNER_IMAGE: String = "runner-pruned".to_string();
+    static ref RUNNER_IMAGE: String = "picorun-runner".to_string();
 }
 
 #[derive(Clone, Debug)]
